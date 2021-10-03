@@ -9,4 +9,5 @@ export type createUserInputType = {
   userName: string,
   password: string,
   email: string
+  userId: string
 }
