@@ -1,7 +1,6 @@
 import { Field, Float, ID, Int, ObjectType } from "type-graphql";
 import { dynamodbClient, } from "../utils/awsResouces";
-import { PutItemCommand, PutItemCommandInput } from "@aws-sdk/client-dynamodb";
-import { Logger } from "../utils/logger";
+import { PutItemCommand, PutItemCommandInput, GetItemCommand, GetItemCommandInput  } from "@aws-sdk/client-dynamodb";
 import { inputPostUserType } from "./../types"
 import moment from "moment";
 
@@ -17,15 +16,15 @@ export class User {
   mailAdress: string;
 
   @Field()
-  startAt: Date
+  startAt: string
 
   @Field(() => Int)
-  runCount: number;
+  runCount?: number;
 
   @Field(() => Float)
-  weight: number;
+  weight?: number;
 
-  async post(inputPostUser: inputPostUserType): Promise<boolean> {
+  static async post(inputPostUser: inputPostUserType): Promise<string | boolean> {
     const { name, email, costomUserId } = inputPostUser
     const startAt = moment().toISOString();
     const params: PutItemCommandInput = {
@@ -39,13 +38,29 @@ export class User {
     }
     try {
       const data = await dynamodbClient.send(new PutItemCommand(params))
-      Logger.LogAccessInfo(data);
-      Logger.LogAccessInfo("dynamo access");
-      return true
+      return startAt
     }
     catch (e) {
-      Logger.LogAccessError(e);
       return false
+    }
+  }
+
+  static async getUserInfo(id :string): Promise<User> {
+    const params: GetItemCommandInput = {
+      TableName: "Users",
+      Key: {
+        id: {S: id}
+      }
+    }
+
+    const data = await dynamodbClient.send(new GetItemCommand(params));
+    const res = data.Item
+    console.log(res);
+    return {
+      id: "test",
+      name: "test",
+      mailAdress: "test@rahrawg",
+      startAt: "1234567890"
     }
   }
 }

@@ -5,9 +5,8 @@ import {
   AttributeType, MessageActionType, AuthFlowType, AdminRespondToAuthChallengeCommand, ChallengeNameType
 } from "@aws-sdk/client-cognito-identity-provider";
 import { envConf } from '../config/config';
-import { Logger } from "../logger";
 
-export const createUser = async (userInput: createUserInputType) => {
+export const createCognitoUser = async (userInput: createUserInputType) => {
   const { userName, password, email, userId } = userInput;
 
   const userAttributes: AttributeType[] = [
@@ -54,12 +53,10 @@ export const createUser = async (userInput: createUserInputType) => {
       },
       Session: res.Session
     }))
-    Logger.LogAccessInfo(res);
     console.log(res)
     return true;
   }
   catch (e) {
-    Logger.LogAccessError(e);
     console.log(e)
     return false
   }
