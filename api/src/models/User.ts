@@ -1,8 +1,9 @@
 import { Field, Float, ID, Int, ObjectType } from "type-graphql";
-import { dynamodbClient, } from "../utils/awsResouces";
-import { PutItemCommand, PutItemCommandInput, GetItemCommand, GetItemCommandInput  } from "@aws-sdk/client-dynamodb";
+import { dbclient, dynamoClient } from "../utils/awsResouces";
+import { PutItemCommand, PutItemCommandInput, GetItemCommand, GetItemCommandInput, } from "@aws-sdk/client-dynamodb";
 import { inputPostUserType } from "./../types"
-import moment from "moment";
+import { GetCommandOutput } from "@aws-sdk/lib-dynamodb";
+import "reflect-metadata";
 
 @ObjectType()
 export class User {
@@ -24,43 +25,57 @@ export class User {
   @Field(() => Float)
   weight?: number;
 
-  static async post(inputPostUser: inputPostUserType): Promise<string | boolean> {
-    const { name, email, costomUserId } = inputPostUser
-    const startAt = moment().toISOString();
+  static async post(inputPostUser: inputPostUserType): Promise<boolean> {
+    const { name, email, costomUserId, startAt } = inputPostUser
     const params: PutItemCommandInput = {
       TableName: "Users",
       Item: {
         name: { S: name },
         mailAdress: { S: email },
-        id: { S: costomUserId },
+        userId: { S: costomUserId },
         startAt: { S: startAt }
       }
     }
     try {
-      const data = await dynamodbClient.send(new PutItemCommand(params))
-      return startAt
+      await dbclient.send(new PutItemCommand(params))
+      return true
     }
     catch (e) {
       return false
     }
   }
 
-  static async getUserInfo(id :string): Promise<User> {
+  static async getUserInfo(id: string): Promise<User> {
     const params: GetItemCommandInput = {
       TableName: "Users",
       Key: {
-        id: {S: id}
+        userId: { S: id }
       }
     }
+    try {
+      const data = await dynamoClient.send(new GetItemCommand(params)) as Omit<GetCommandOutput, "Item"> & {
+        Item: {
+          name: { S: string },
+          email: { S: string },
+          userId: { S: string },
+          startAt: { S: string },
+          rounCount?: { N: string },
+          weight?: { N: string },
+        }
+      }
+      const res = data.Item
 
-    const data = await dynamodbClient.send(new GetItemCommand(params));
-    const res = data.Item
-    console.log(res);
-    return {
-      id: "test",
-      name: "test",
-      mailAdress: "test@rahrawg",
-      startAt: "1234567890"
+      return {
+        id: res.userId.S,
+        name: res.name.S,
+        mailAdress: res.email.S,
+        startAt: res.startAt.S,
+        runCount: res.rounCount && Number(res.rounCount.N),
+        weight: res.weight && Number(res.weight.N)
+      }
+    } catch (e) {
+      console.log(e)
+      throw new Error("Dynamo db error")
     }
   }
 }
