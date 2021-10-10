@@ -23,9 +23,9 @@ export class UserResolver {
       password: userInput.password,
       userId: id
     })
-    if (!resut) throw new Error("user register is falled");    
+    if (!resut) throw new Error("user register is falled");
 
-    const res = User.post({
+    const res = await User.post({
       name: userInput.name,
       email: userInput.mailAdress,
       costomUserId: id,

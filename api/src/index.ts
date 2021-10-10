@@ -9,7 +9,7 @@ const main = async () => {
     emitSchemaFile: true
   })
   const server = new ApolloServer({ schema });
-  await server.listen(9000);
+  await server.listen(8080);
   console.log("server run glaphql server");
 }
 
