@@ -61,3 +61,7 @@ export const createCognitoUser = async (userInput: createUserInputType) => {
     return false
   }
 }
+
+export const changeUserAttributes = async (userInput:createUserInputType) => {
+  
+}

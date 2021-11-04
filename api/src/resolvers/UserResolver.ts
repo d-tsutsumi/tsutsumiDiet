@@ -4,13 +4,14 @@ import { User } from "../models/User";
 import uuid from "node-uuid";
 import { createCognitoUser } from "../utils/awsResouces/cognitoAuth";
 import moment from "moment";
+import { PutMenuArgs } from "../inputs/PutMenuInput";
 
 @Resolver()
 export class UserResolver {
 
   @Query(returns => User)
   async getUserInfo(@Arg("id") id: string) {
-    return User.getUserInfo(id);
+    return await User.getUserInfo(id);
   }
 
   @Mutation(returns => User)
@@ -38,5 +39,29 @@ export class UserResolver {
       mailAdress: userInput.mailAdress,
       startAt
     }
+  }
+
+  @Mutation(returns => User)
+  async putUser(@Arg("userInput") UserInput: PutMenuArgs) {
+    const { userId, name, mailAdress, weight, password } = UserInput
+    const user = await User.getUserInfo(userId);
+    if (!user) throw new Error("user is not  found");
+
+    const res = await User.put(userId, {
+      mailAdress,
+      name,
+      weight
+    })
+
+    if (!name && !mailAdress && !password) {
+      return {
+        userId: res.id,
+        name: res.name,
+        mailAdress: res.mailAdress,
+        weight: res.weight,
+        startAt: res.startAt
+      }
+    }
+    
   }
 };

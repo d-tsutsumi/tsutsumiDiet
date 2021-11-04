@@ -1,6 +1,9 @@
 import { Field, Float, ID, Int, ObjectType } from "type-graphql";
 import { dbclient, dynamoClient } from "../utils/awsResouces";
-import { PutItemCommand, PutItemCommandInput, GetItemCommand, GetItemCommandInput, } from "@aws-sdk/client-dynamodb";
+import {
+  PutItemCommand, PutItemCommandInput,
+  GetItemCommand, GetItemCommandInput, PutItemCommandOutput,
+} from "@aws-sdk/client-dynamodb";
 import { inputPostUserType, inputPutUserType } from "./../types"
 import { GetCommandOutput } from "@aws-sdk/lib-dynamodb";
 import "reflect-metadata";
@@ -15,6 +18,7 @@ interface UserItemType {
     weight?: { N: string },
   }
 }
+
 
 @ObjectType()
 export class User {
@@ -58,7 +62,7 @@ export class User {
     }
   }
 
-  static async put(id: string, input: inputPutUserType): Promise<boolean> {
+  static async put(id: string, input: inputPutUserType): Promise<User> {
     const user = await this.getUserInfo(id);
     const param: PutItemCommandInput = {
       TableName: "Users",
@@ -71,10 +75,16 @@ export class User {
       }
     }
     try {
-      const res = await dbclient.send(new PutItemCommand(param));
-      console.log(res);
-
-      return true;
+      const { Item } =
+        await dbclient.send(new PutItemCommand(param)) as Omit<PutItemCommandOutput, "Item"> & UserItemType;
+      return {
+        id: Item.userId.S,
+        name: Item.name.S,
+        mailAdress: Item.mailAdress.S,
+        startAt: Item.startAt.S,
+        runCount: Item.rounCount && Number(Item.rounCount.N),
+        weight: Item.weight && Number(Item.weight.N)
+      }
     } catch (e) {
       console.log(e)
       throw new Error("dynamo db error")
