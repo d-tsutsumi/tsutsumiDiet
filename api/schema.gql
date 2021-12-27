@@ -3,14 +3,29 @@
 # !!!   DO NOT MODIFY THIS FILE BY YOURSELF   !!!
 # -----------------------------------------------
 
-input CreateMenuArgs {
+input CreateUserInput {
   mailAdress: String!
   name: String!
   password: String!
 }
 
+input DeleteUserInput {
+  userId: String!
+  userName: String!
+}
+
 type Mutation {
-  createUser(userInput: CreateMenuArgs!): User!
+  createUser(userInput: CreateUserInput!): User!
+  deleteUser(userInput: DeleteUserInput!): User!
+  putUser(userInput: PutUserInput!): User!
+}
+
+input PutUserInput {
+  mailAdress: String!
+  name: String!
+  password: String!
+  userId: String!
+  weight: Float!
 }
 
 type Query {

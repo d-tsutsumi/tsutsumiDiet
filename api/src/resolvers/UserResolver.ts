@@ -1,57 +1,71 @@
-import { Arg, Mutation, Query, Resolver, } from "type-graphql";
-import { CreateMenuArgs } from "../inputs/CreateMenuInput";
+import { Arg, Mutation, Query, Resolver, ID } from "type-graphql";
 import { User } from "../models/User";
 import uuid from "node-uuid";
-import { createCognitoUser } from "../utils/awsResouces/cognitoAuth";
+import cognitoAuth from "../utils/awsResouces/cognitoAuth";
 import moment from "moment";
-import { PutMenuArgs } from "../inputs/PutMenuInput";
+import { ApolloError } from "apollo-server";
+import { DeleteUserInput, CreateUserInput, PutUserInput } from "../inputs";
+import { UserErrCode } from "../utils/error/errorCode";
 
 @Resolver()
 export class UserResolver {
-
-  @Query(returns => User)
+  @Query((returns) => User)
   async getUserInfo(@Arg("id") id: string) {
-    return await User.getUserInfo(id);
+    const res = await User.getUserInfo(id);
+    if (!res) {
+      const { message, code } = UserErrCode.NotFoundError;
+      throw new ApolloError(message, code);
+    }
+    return res;
   }
 
-  @Mutation(returns => User)
-  async createUser(@Arg("userInput") userInput: CreateMenuArgs) {
+  @Mutation((returns) => User)
+  async createUser(@Arg("userInput") userInput: CreateUserInput) {
+    const { name, mailAdress, password } = userInput;
     const startAt = moment().toISOString();
     const id = uuid.v1();
-    const resut = await createCognitoUser({
-      userName: userInput.name,
-      email: userInput.mailAdress,
-      password: userInput.password,
-      userId: id
-    })
-    if (!resut) throw new Error("user register is falled");
+    const result = await cognitoAuth.createUser({
+      userName: name,
+      email: mailAdress,
+      password: password,
+      userId: id,
+    });
+    if (!result.result && result.error)
+      throw new ApolloError(result.error.errMessage, result.error.errName);
+    if (!result.result && !result.error) throw new ApolloError("Exception");
 
     const res = await User.post({
-      name: userInput.name,
-      email: userInput.mailAdress,
+      name: name,
+      email: mailAdress,
       costomUserId: id,
-      startAt
-    })
-    if (!res) throw new Error("dynamodb exception");
+      startAt,
+    });
+
+    if (!res) {
+      cognitoAuth.deleteUser({ userName: name });
+      const { message, code } = UserErrCode.NotUserRegistedError;
+      throw new ApolloError(message, code);
+    }
+
     return {
       id,
       name: userInput.name,
       mailAdress: userInput.mailAdress,
-      startAt
-    }
+      startAt,
+    };
   }
 
-  @Mutation(returns => User)
-  async putUser(@Arg("userInput") UserInput: PutMenuArgs) {
-    const { userId, name, mailAdress, weight, password } = UserInput
+  @Mutation((returns) => User)
+  async putUser(@Arg("userInput") userInput: PutUserInput) {
+    const { userId, name, mailAdress, weight, password } = userInput;
     const user = await User.getUserInfo(userId);
     if (!user) throw new Error("user is not  found");
 
     const res = await User.put(userId, {
       mailAdress,
       name,
-      weight
-    })
+      weight,
+    });
 
     if (!name && !mailAdress && !password) {
       return {
@@ -59,9 +73,16 @@ export class UserResolver {
         name: res.name,
         mailAdress: res.mailAdress,
         weight: res.weight,
-        startAt: res.startAt
-      }
+        startAt: res.startAt,
+      };
     }
-    
   }
-};
+  @Mutation((returns) => User)
+  async deleteUser(@Arg("userInput") userInput: DeleteUserInput) {
+    const { userId, userName } = userInput;
+    const res = this.getUserInfo(userId);
+    cognitoAuth.deleteUser({ userName });
+    User.delete(userId);
+    return res;
+  }
+}
