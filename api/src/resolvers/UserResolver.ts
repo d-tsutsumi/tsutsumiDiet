@@ -1,8 +1,8 @@
-import { Arg, Mutation, Query, Resolver, ID } from "type-graphql";
-import { User } from "../models/User";
+import { Arg, Mutation, Query, Resolver } from "type-graphql";
 import uuid from "node-uuid";
-import cognitoAuth from "../utils/awsResouces/cognitoAuth";
 import moment from "moment";
+import { cognitoAuth } from "../utils/awsResouces";
+import { User } from "../models/User";
 import { ApolloError } from "apollo-server";
 import { DeleteUserInput, CreateUserInput, PutUserInput } from "../inputs";
 import { UserErrCode } from "../utils/error/errorCode";
@@ -32,7 +32,7 @@ export class UserResolver {
     });
     if (!result.result && result.error)
       throw new ApolloError(result.error.errMessage, result.error.errName);
-    if (!result.result && !result.error) throw new ApolloError("Exception");
+    if (!result.result && !result.error) throw new ApolloError("server error");
 
     const res = await User.post({
       name: name,
@@ -59,7 +59,10 @@ export class UserResolver {
   async putUser(@Arg("userInput") userInput: PutUserInput) {
     const { userId, name, mailAdress, weight, password } = userInput;
     const user = await User.getUserInfo(userId);
-    if (!user) throw new Error("user is not  found");
+    if (!user) {
+      const { message, code } = UserErrCode.NotFoundError;
+      throw new ApolloError(message, code);
+    }
 
     const res = await User.put(userId, {
       mailAdress,

@@ -1,6 +1,6 @@
-import { User } from "../../../models/User";   
+import { User } from "../../models/User";   
 import "reflect-metadata";
-import { inputPostUserType } from "../../../types";
+import { inputPostUserType } from "../../types";
 import moment from "moment";
 
 const param:inputPostUserType = {

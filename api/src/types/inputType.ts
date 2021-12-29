@@ -17,3 +17,11 @@ export type  inputDeleteUserType = {
   userName: string;
   id: string
 }
+
+export type inputPostRunRecodeType = {
+  id: string;
+  userId: string;
+  distance: number;
+  postAt: string
+  runTime: number;
+}

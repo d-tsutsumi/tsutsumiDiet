@@ -103,7 +103,7 @@ const deleteUser = async (userInput: cognitoDeleteUserType) => {
   }
 };
 
-export default {
+export const cognitoAuth = {
   createUser: createCognitoUser,
   deleteUser: deleteUser,
   changeUserAttributes: changeUserAttributes,

@@ -1,5 +1,5 @@
-import { User } from "../../../models/User";
-import { inputPutUserType } from "../../../types";
+import { User } from "../../models/User";
+import { inputPutUserType } from "../../types";
 
 const param: inputPutUserType = {
   name: "tsutsumi123",
