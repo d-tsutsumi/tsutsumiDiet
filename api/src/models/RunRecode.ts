@@ -41,7 +41,7 @@ export class RunRecode {
   @Field(() => Float)
   runTime: number;
 
-  static async get(userId: string): Promise<RunRecode[] | undefined> {
+  static async get(userId: string): Promise<RunRecode[] | void> {
     const param: QueryCommandInput = {
       TableName: RUNRECODE_TABLE,
       KeyConditionExpression: "userId = :s",

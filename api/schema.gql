@@ -17,7 +17,14 @@ input DeleteUserInput {
 type Mutation {
   createUser(userInput: CreateUserInput!): User!
   deleteUser(userInput: DeleteUserInput!): User!
+  postRunRecode(runReocdeInput: PostRunRecodeInput!): RunRecode!
   putUser(userInput: PutUserInput!): User!
+}
+
+input PostRunRecodeInput {
+  distance: Float!
+  runTime: Float!
+  userId: String!
 }
 
 input PutUserInput {
@@ -29,7 +36,16 @@ input PutUserInput {
 }
 
 type Query {
+  getRunRecode(userId: String!): RunRecode!
   getUserInfo(id: String!): User!
+}
+
+type RunRecode {
+  distance: Float!
+  id: ID!
+  postAt: String!
+  runTime: Float!
+  userId: String!
 }
 
 type User {

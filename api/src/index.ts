@@ -1,12 +1,12 @@
 import "reflect-metadata";
 import { ApolloServer } from "apollo-server";
 import { buildSchema } from "type-graphql";
-import { UserResolver } from "./resolvers/UserResolver";
+import { UserResolver, RunRecodeResolver } from "./resolvers";
 import { envConf } from "./utils/config/config";
 
 const main = async () => {
   const schema = await buildSchema({
-    resolvers: [UserResolver],
+    resolvers: [UserResolver, RunRecodeResolver],
     emitSchemaFile: true,
   });
   const server = new ApolloServer({ schema, cors: envConf.gql_cors });

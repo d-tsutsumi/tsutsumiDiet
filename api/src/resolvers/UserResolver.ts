@@ -2,7 +2,7 @@ import { Arg, Mutation, Query, Resolver } from "type-graphql";
 import uuid from "node-uuid";
 import moment from "moment";
 import { cognitoAuth } from "../utils/awsResouces";
-import { User } from "../models/User";
+import { User } from '../models/User';
 import { ApolloError } from "apollo-server";
 import { DeleteUserInput, CreateUserInput, PutUserInput } from "../inputs";
 import { UserErrCode } from "../utils/error/errorCode";
@@ -20,7 +20,7 @@ export class UserResolver {
   }
 
   @Mutation((returns) => User)
-  async createUser(@Arg("userInput") userInput: CreateUserInput) {
+  async createUser(@Arg("userInput") userInput: CreateUserInput):Promise<User> {
     const { name, mailAdress, password } = userInput;
     const startAt = moment().toISOString();
     const id = uuid.v1();
@@ -56,7 +56,7 @@ export class UserResolver {
   }
 
   @Mutation((returns) => User)
-  async putUser(@Arg("userInput") userInput: PutUserInput) {
+  async putUser(@Arg("userInput") userInput: PutUserInput): Promise<User> {
     const { userId, name, mailAdress, weight, password } = userInput;
     const user = await User.getUserInfo(userId);
     if (!user) {
@@ -70,18 +70,17 @@ export class UserResolver {
       weight,
     });
 
-    if (!name && !mailAdress && !password) {
       return {
-        userId: res.id,
+        id: res.id,
         name: res.name,
         mailAdress: res.mailAdress,
-        weight: res.weight,
+        weight: res.weight && res.weight,
         startAt: res.startAt,
+        runCount:res.runCount && res.runCount
       };
-    }
   }
   @Mutation((returns) => User)
-  async deleteUser(@Arg("userInput") userInput: DeleteUserInput) {
+  async deleteUser(@Arg("userInput") userInput: DeleteUserInput): Promise<User> {
     const { userId, userName } = userInput;
     const res = this.getUserInfo(userId);
     cognitoAuth.deleteUser({ userName });
