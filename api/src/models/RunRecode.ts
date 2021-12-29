@@ -3,6 +3,9 @@ import {
   QueryCommandInput,
   QueryCommand,
   QueryCommandOutput,
+  PutItemCommand,
+  PutItemCommandInput,
+  PutItemCommandOutput,
 } from "@aws-sdk/client-dynamodb";
 import { inputPostRunRecodeType } from "../types";
 import { dbClient } from "../utils/awsResouces";
@@ -14,10 +17,6 @@ interface RunRecodeAtributes {
   distance: { N: number };
   postAt: { S: string };
   runTime: { N: number };
-}
-
-interface runRecodeType {
-  Item: RunRecodeAtributes;
 }
 
 interface runRecodeTypes {
@@ -69,5 +68,37 @@ export class RunRecode {
     return runRecode;
   }
 
-  static async post(recodeArgs: inputPostRunRecodeType) {}
+  static async post({
+    id,
+    userId,
+    distance,
+    postAt,
+    runTime,
+  }: inputPostRunRecodeType): Promise<RunRecode | void> {
+    const params: PutItemCommandInput = {
+      TableName: RUNRECODE_TABLE,
+      Item: {
+        id: { S: id },
+        userId: { S: userId },
+        distance: { N: distance.toString() },
+        postAt: { S: postAt },
+        runTime: { N: runTime.toString() },
+      },
+    };
+    const res = (await dbClient.send(new PutItemCommand(params))) as Omit<
+      PutItemCommandOutput,
+      "Attributes"
+    > &
+      RunRecodeAtributes;
+
+    if (!res.userId || !res.id) return;
+
+    return {
+      id: res.id.S,
+      userId: res.userId.S,
+      distance: res.distance.N,
+      postAt: res.postAt.S,
+      runTime: res.runTime.N,
+    };
+  }
 }
