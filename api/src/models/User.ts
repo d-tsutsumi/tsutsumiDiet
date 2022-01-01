@@ -72,7 +72,6 @@ export class User {
 
   static async put(id: string, input: inputPutUserType): Promise<User> {
     const user = await this.getUserInfo(id);
-
     if (!user) {
       const { message, code } = UserErrCode.NotFoundError;
       throw new ApolloError(message, code);
@@ -93,7 +92,6 @@ export class User {
         },
       };
     }
-    console.log(param);
     try {
       const { Item } = (await dbClient.send(new PutItemCommand(param))) as Omit<
         PutItemCommandOutput,
@@ -114,7 +112,7 @@ export class User {
     }
   }
 
-  static async getUserInfo(id: string): Promise<User | null> {
+  static async getUserInfo(id: string): Promise<User | undefined> {
     const params: GetItemCommandInput = {
       TableName: USER_TABLE,
       Key: {
@@ -127,7 +125,7 @@ export class User {
     > &
       UserItemType;
 
-    if (!data.Item) return null;
+    if (!data.Item) return;
 
     const res = data.Item;
     return {

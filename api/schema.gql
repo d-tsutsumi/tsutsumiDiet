@@ -36,7 +36,8 @@ input PutUserInput {
 }
 
 type Query {
-  getRunRecode(userId: String!): RunRecode!
+  getRunRecode(userId: String!): [RunRecode!]!
+  getSumdistance(userId: String!): sumDistance!
   getUserInfo(id: String!): User!
 }
 
@@ -55,4 +56,8 @@ type User {
   runCount: Int!
   startAt: String!
   weight: Float!
+}
+
+type sumDistance {
+  ditance: Float!
 }

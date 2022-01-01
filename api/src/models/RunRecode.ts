@@ -1,4 +1,4 @@
-import { Field, Float, ID, ObjectType } from "type-graphql";
+import { Field, Float, ID, ObjectType, InputType } from "type-graphql";
 import {
   QueryCommandInput,
   QueryCommand,
@@ -10,6 +10,7 @@ import {
 import { inputPostRunRecodeType } from "../types";
 import { dbClient } from "../utils/awsResouces";
 import { envConf } from "../utils/config/config";
+import { ApolloError } from "apollo-server";
 
 interface RunRecodeAtributes {
   id: { S: string };
@@ -41,7 +42,7 @@ export class RunRecode {
   @Field(() => Float)
   runTime: number;
 
-  static async get(userId: string): Promise<RunRecode[] | void> {
+  static async get(userId: string): Promise<RunRecode[] | undefined> {
     const param: QueryCommandInput = {
       TableName: RUNRECODE_TABLE,
       KeyConditionExpression: "userId = :s",
@@ -49,23 +50,28 @@ export class RunRecode {
         ":s": { S: userId },
       },
     };
-    const { Items } = (await dbClient.send(new QueryCommand(param))) as Omit<
-      QueryCommandOutput,
-      "Items"
-    > &
-      runRecodeTypes;
+    try {
+      const { Items } = (await dbClient.send(new QueryCommand(param))) as Omit<
+        QueryCommandOutput,
+        "Items"
+      > &
+        runRecodeTypes;
 
-    if (!Items) return;
+      if (!Items) return;
 
-    const runRecode = Items.map((value) => ({
-      id: value.id.S,
-      userId: value.userId.S,
-      distance: value.distance.N,
-      postAt: value.postAt.S,
-      runTime: value.runTime.N,
-    }));
+      const runRecode = Items.map((value) => ({
+        id: value.id.S,
+        userId: value.userId.S,
+        distance: value.distance.N,
+        postAt: value.postAt.S,
+        runTime: value.runTime.N,
+      }));
 
-    return runRecode;
+      return runRecode;
+    } catch (e) {
+      console.log(e);
+      throw new ApolloError("Dynamodb error");
+    }
   }
 
   static async post({
@@ -74,7 +80,7 @@ export class RunRecode {
     distance,
     postAt,
     runTime,
-  }: inputPostRunRecodeType): Promise<RunRecode | void> {
+  }: inputPostRunRecodeType): Promise<RunRecode | undefined> {
     const params: PutItemCommandInput = {
       TableName: RUNRECODE_TABLE,
       Item: {
@@ -85,20 +91,36 @@ export class RunRecode {
         runTime: { N: runTime.toString() },
       },
     };
-    const res = (await dbClient.send(new PutItemCommand(params))) as Omit<
-      PutItemCommandOutput,
-      "Attributes"
-    > &
-      RunRecodeAtributes;
-
-    if (!res.userId || !res.id) return;
-
+    try {
+      await dbClient.send(new PutItemCommand(params));
+    } catch (e) {
+      console.log(e);
+      if (e instanceof Error) {
+        console.log(e);
+        throw new ApolloError(e.message, e.name);
+      }
+      throw new ApolloError("dynamo db error");
+    }
     return {
-      id: res.id.S,
-      userId: res.userId.S,
-      distance: res.distance.N,
-      postAt: res.postAt.S,
-      runTime: res.runTime.N,
+      id,
+      userId,
+      distance,
+      postAt,
+      runTime,
     };
+  }
+}
+
+@ObjectType()
+export class sumDistance {
+  @Field(() => Float)
+  ditance: number;
+
+  static async getSamDistance(userId: string): Promise<number | undefined> {
+    const res = await RunRecode.get(userId);
+    if (!res) return;
+    return res.reduce((previousValue, value) => {
+      return previousValue + value.distance;
+    }, res[0].distance);
   }
 }
