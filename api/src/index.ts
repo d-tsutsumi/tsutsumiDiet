@@ -11,7 +11,6 @@ const main = async () => {
   });
   const server = new ApolloServer({ schema, cors: envConf.gql_cors });
   await server.listen(8080);
-  console.log("server run glaphql server");
 };
 
 main();

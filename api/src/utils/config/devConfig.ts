@@ -1,3 +1,4 @@
+import { logConfigDev } from './logConfig';
 require("dotenv").config();
 
 const conf = () => {
@@ -15,6 +16,7 @@ const conf = () => {
       origin: process.env.GQL_ORIGIN_DEV || "",
       credentials: true,
     },
+    logConfig: logConfigDev,
   };
 };
 
