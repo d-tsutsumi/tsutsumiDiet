@@ -1,11 +1,10 @@
-import { Field, Float, ID, ObjectType, InputType } from "type-graphql";
+import { Field, Float, ID, ObjectType } from "type-graphql";
 import {
   QueryCommandInput,
   QueryCommand,
   QueryCommandOutput,
   PutItemCommand,
   PutItemCommandInput,
-  PutItemCommandOutput,
 } from "@aws-sdk/client-dynamodb";
 import { inputPostRunRecodeType } from "../types";
 import { dbClient } from "../utils/awsResouces";
@@ -116,9 +115,9 @@ export class sumDistance {
   @Field(() => Float)
   ditance: number;
 
-  static async getSamDistance(userId: string): Promise<number | undefined> {
+  static async getSamDistance(userId: string): Promise<number> {
     const res = await RunRecode.get(userId);
-    if (!res) return;
+    if (!res) return 0;
     return res.reduce((previousValue, value) => {
       return previousValue + value.distance;
     }, res[0].distance);

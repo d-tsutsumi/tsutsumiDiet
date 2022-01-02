@@ -1,5 +1,5 @@
 import { cognitoCreateUserType } from "../../types";
-import { cognitoClient } from "./index";
+import { cognitoClient } from "./client";
 import {
   AdminCreateUserCommand,
   AdminCreateUserCommandInput,
@@ -14,6 +14,7 @@ import {
 } from "@aws-sdk/client-cognito-identity-provider";
 import { envConf } from "../config/config";
 import { cognitoDeleteUserType } from "../../types/cognitoType";
+import { ApolloError } from "apollo-server";
 
 const createCognitoUser = async (userInput: cognitoCreateUserType) => {
   const { userName, password, email, userId } = userInput;
@@ -71,7 +72,7 @@ const createCognitoUser = async (userInput: cognitoCreateUserType) => {
   } catch (e) {
     console.log(e);
     if (e instanceof Error) {
-      let error = {
+      const error = {
         errName: e.name,
         errMessage: e.message,
       };
@@ -96,15 +97,15 @@ const deleteUser = async (userInput: cognitoDeleteUserType) => {
   };
   try {
     await cognitoClient.send(new AdminDeleteUserCommand(params));
-    return true;
   } catch (e) {
     console.log(e);
-    return false;
+    if (e instanceof Error) throw new ApolloError(e.message, e.name);
+    else throw new ApolloError("server erorr");
   }
 };
 
 export const cognitoAuth = {
   createUser: createCognitoUser,
-  deleteUser: deleteUser,
-  changeUserAttributes: changeUserAttributes,
+  deleteUser,
+  changeUserAttributes,
 };

@@ -18,9 +18,7 @@ export class RunRecodeResolver {
 
   @Query((returns) => sumDistance)
   async getSumdistance(@Arg("userId") userId: string): Promise<number> {
-    const distance = await sumDistance.getSamDistance(userId);
-    if (!distance) return 0;
-    return distance;
+    return await sumDistance.getSamDistance(userId);
   }
 
   @Mutation((returns) => RunRecode)
