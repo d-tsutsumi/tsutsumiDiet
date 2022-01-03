@@ -10,7 +10,6 @@ class Logger {
     let logger = Log4js.getLogger("access");
     logger.info(message);
   }
-
   public static LogAccessWarning(message: any): void {
     let logger = Log4js.getLogger("access");
     logger.warn(message);

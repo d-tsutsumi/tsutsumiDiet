@@ -15,6 +15,7 @@ import {
 import { envConf } from "../config/config";
 import { cognitoDeleteUserType } from "../../types/cognitoType";
 import { ApolloError } from "apollo-server";
+import { logger } from "../config/logger";
 
 const createCognitoUser = async (userInput: cognitoCreateUserType) => {
   const { userName, password, email, userId } = userInput;
@@ -70,7 +71,7 @@ const createCognitoUser = async (userInput: cognitoCreateUserType) => {
       error: null,
     };
   } catch (e) {
-    console.log(e);
+    logger.LogAccessError(e);
     if (e instanceof Error) {
       const error = {
         errName: e.name,
@@ -98,7 +99,7 @@ const deleteUser = async (userInput: cognitoDeleteUserType) => {
   try {
     await cognitoClient.send(new AdminDeleteUserCommand(params));
   } catch (e) {
-    console.log(e);
+    logger.LogAccessError(e);
     if (e instanceof Error) throw new ApolloError(e.message, e.name);
     else throw new ApolloError("server erorr");
   }

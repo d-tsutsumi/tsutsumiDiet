@@ -10,6 +10,7 @@ import { inputPostRunRecodeType } from "../types";
 import { dbClient } from "../utils/awsResouces";
 import { envConf } from "../utils/config/config";
 import { ApolloError } from "apollo-server";
+import { logger } from '../utils/config/logger';
 
 interface RunRecodeAtributes {
   id: { S: string };
@@ -68,7 +69,7 @@ export class RunRecode {
 
       return runRecode;
     } catch (e) {
-      console.log(e);
+      logger.LogAccessError(e)
       throw new ApolloError("Dynamodb error");
     }
   }
@@ -93,9 +94,8 @@ export class RunRecode {
     try {
       await dbClient.send(new PutItemCommand(params));
     } catch (e) {
-      console.log(e);
+      logger.LogAccessError(e)
       if (e instanceof Error) {
-        console.log(e);
         throw new ApolloError(e.message, e.name);
       }
       throw new ApolloError("dynamo db error");

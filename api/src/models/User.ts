@@ -16,6 +16,7 @@ import { dbClient } from "../utils/awsResouces";
 import { UserErrCode } from "../utils/error/errorCode";
 import { inputPostUserType, inputPutUserType } from "./../types";
 import { envConf } from "../utils/config/config";
+import { logger } from '../utils/config/logger';
 
 interface UserItemType {
   Item: {
@@ -65,7 +66,7 @@ export class User {
       await dbClient.send(new PutItemCommand(params));
       return true;
     } catch (e) {
-      console.log(e);
+      logger.LogAccessError(e)
       return false;
     }
   }
@@ -107,7 +108,7 @@ export class User {
         weight: Item.weight && Number(Item.weight.N),
       };
     } catch (e) {
-      console.log(e);
+      logger.LogAccessError(e)
       throw new ApolloError("internal server error");
     }
   }
